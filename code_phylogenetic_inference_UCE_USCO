@@ -1,0 +1,169 @@
+################################################
+#title           : Phylogenetic inference UCE and USCO
+#description     : This script combine all scripts for the phylogenetic inference using UCE and USCO.
+#author		     : Inés Carrasquer Puyal
+#email	         : ines.carrasquer@unige.ch
+#date            : 20.01.2025
+################################################
+
+
+### Phylogenetic inference
+
+#Get sequences
+for j in Family1 Family2
+    do
+
+    mkdir ${j}
+    cd ${j}
+    ln -s ../../CONSENSUS_cov3/*${j}*_contigs.fasta .
+    cat *fasta >> all_seq.fasta
+    nb_samples=$(( $(grep ${j} ../list_sample_mapping |  wc -l) / 4 ))
+
+    #List of loci shared by 1/4 of samples, considering those with no more than 80% missing
+    seqtk comp all_seq.fasta | awk '{print $1, $9/$2*100}' | awk '$2 < 80 {print $1}' | cut -d "_" -f2,3,4 | sort | uniq -c | awk '$1 > '${nb_samples}' {print $2}' > list_loci_80m_1_4_samples
+    grep ">" all_seq.fasta | sed -e 's/>//g' > sequences
+
+    # Align loci
+
+    while read a
+        do
+
+        #Get sequences
+        grep ${a} sequences > temp_seq
+        fastaselect.pl all_seq.fasta temp_seq > locus_${a}.fasta
+
+        #Align
+        mafft  --auto --reorder --adjustdirection locus_${a}.fasta > locus_${a}_align.fasta
+
+        #Homogenise mising values
+        sed -e '/^>/!s/N/-/g' -e '/^>/!s/n/-/g' -e '/^>/!s/?/-/g' locus_${a}_align.fasta > temp_trim.fasta
+        #Clean
+        trimal -in temp_trim.fasta -out temp_trim2.fasta  -noallgaps  
+        trimal -in temp_trim2.fasta -out locus_${a}_align_trimal.fasta -gt 0.6 -gw 5 # gt:  1 - (fraction of sequences with a gap allowed) gw: Window size only applies to statistics/methods based on Gaps.
+        rm temp_trim*
+
+        done < list_loci_80m_1_4_samples
+            
+    #Remove sequences with more than 40% of N
+
+    for i in $(ls *_trimal.fasta)
+        do
+        name=$(echo ${i} | sed -e 's/.fasta//g')
+        seqtk comp ${i} | awk '{print $1"\t"$9/$2}' | awk '{if ($2 < 0.4) print $1}' > temp_list_keep
+        fastaselect.pl ${i} temp_list_keep > ${name}_N60.fasta
+        rm temp_list_keep
+        done
+
+    #Paralog cleaning with Orthoskim
+
+    mkdir align
+    PWD_BASE=${PWD}
+    cd align
+    mv ../*orthoskim.fasta .
+    cd ${PWD_BASE}
+
+    python3.5 FilterParalog.py \
+        -i ${PWD}/align \
+        -o ${PWD}/out_order \
+        -e fasta -q order -w 100 -p 20
+    
+    python3.5 FilterParalog.py \
+        -i ${PWD}/out_order \
+        -o ${PWD}/out_fam \
+        -e fa -q family -w 100 -p 20
+
+    python3.5 FilterParalog.py \
+        -i ${PWD}/out_fam \
+        -o ${PWD}/out_genus \
+        -e fa -q genus -w 50 -p 10
+
+    rm -r out_order
+    rm -r out_fam
+
+    #Come back to my name from compatible name for Orthoskim
+
+    for i in $(ls ${PWD}/out_genus)
+        do 
+        locus=$(echo ${i} | sed -e 's/.fa//g')
+        grep -Ff <(grep ">" ${PWD}/out_genus/${i} | cut -d">" -f2) corresp_samplesnames_orthoskim  | awk '{print $2"\t"$1}' > temp_corresp
+        corresp_fab.pl temp_corresp ${PWD}/out_genus/${i} > ${locus}_orthoskimclean.fasta
+        done
+
+    #Remove samples with more than 80% of N
+
+    AMAS.py concat -i *_orthoskimclean.fasta -f fasta -d dna
+    seqtk comp concatenated.out | awk '{print $1"\t"$9/$2*100}' | cut -d"." -f1 > temp_comp
+    awk '$2 < 80 {print ">"$1"\t>"$1"-"$2}' temp_comp > list_corresp
+    grep ${j} ../../list_sample_mapping_outgroups | cut -f1 -d" " > list_outgroups
+    grep -Ff list_outgroups temp_comp | sort -k2,2 -n | awk '{print ">"$1"\t>"$1"-"$2}' >> list_corresp
+
+    cut -f 1 list_corresp > list_corresp1
+
+    for i in $(ls *_orthoskimclean.fasta)
+        do
+
+        locus=$(echo ${i} | sed  -e 's/.fasta//g')
+        grep ">" ${i} | grep -Ff list_corresp1  | cut -d ">" -f2 > temp_samples
+        fastaselect.pl ${i} temp_samples > temp_locus
+        grep -Ff temp_samples list_corresp > temp_corresp
+        corresp_fab.pl temp_corresp temp_locus > ${locus}_N80.fasta
+
+        done
+
+    #Keep only loci with more than 1/3 of samples
+    grep ${j} ../../list_sample_mapping | cut -f1 -d" " > temp
+    grep -c -Ff temp *N80.fasta | sed "s/fasta:/fasta\\t/g"> Summary_samples_loci
+    NB=$(( $(grep ${j} ../../list_sample_mapping | cut -d" " -f1 | sort -u | wc -l | cut -d" " -f1) / 3 ))
+    mkdir loci_1_3
+    cd loci_1_3
+    awk '{ if ($2  > '"${NB}"') print $1}' ../Summary_samples_loci  > list_loci_2_${j}_phylo_N80
+    for i in $(cat list_loci_2_${j}_phylo_N80);    do  ln -s ../${i} . ; done
+
+    #CONCAT + IQTREE
+
+    AMAS.py concat -i *N80.fasta -f fasta -d dna -e
+
+    #Prep data: fasta to Phylip
+    perl /home/ines/bin/fasta2relaxedPhylip.pl -f concatenated.out -o concatenated.phylip
+
+    #Partition finder
+    #Prep data
+    mkdir FOLDER
+    echo "## ALIGNMENT FILE ##
+    alignment = concatenated.phylip;
+
+    ## BRANCHLENGTHS: linked | unlinked ##
+    branchlengths = linked;
+
+    ## MODELS OF EVOLUTION: all | allx | mrbayes | beast | gamma | gammai | <list> ##
+    models = GTR, GTR+G, GTR+I+G;
+
+    # MODEL SELECCTION: AIC | AICc | BIC #
+    model_selection = aicc;
+
+    ## DATA BLOCKS: see manual for how to define ##
+    [data_blocks]" > FOLDER/partition_finder.cfg
+
+    cat partitions.txt | tr '\n' '+' | sed -e 's/+/;+/g'| tr '+' '\n' >> FOLDER/partition_finder.cfg
+
+    echo "## SCHEMES, search: all | user | greedy | rcluster | rclusterf | kmeans##
+    [schemes]
+    search = rcluster;" >> FOLDER/partition_finder.cfg
+
+    cp concatenated.phylip FOLDER/
+
+    #Run
+    PartitionFinder.py -p 6 -r FOLDER/
+
+    #Model finder
+
+    #Prep
+    sed -n '/nexus/,/end/p' FOLDER/analysis/best_scheme.txt | grep -v PartitionFinder > partitionfinder_best_scheme_partitions.nex
+    #Run
+    iqtree -nt 2 -s concatenated.phylip -m MFP -spp partitionfinder_best_scheme_partitions.nex -safe -redo
+
+    #Phylogeny using IQ-TREE
+
+    iqtree2 -nt 6 -s concatenated.phylip -spp partitionfinder_best_scheme_partitions.nex.best_scheme.nex -B 1000 -bnni -alrt 1000  -safe --prefix concatenated_output --redo-tree
+
+    done

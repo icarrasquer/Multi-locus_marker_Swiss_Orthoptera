@@ -1,0 +1,106 @@
+################################################
+#title           : Intraspecific biogeographic structure
+#description     : This script combine all scripts for the investigation of intraspecific biogeographic structure using UCE and USCO.
+#author		     : Inés Carrasquer Puyal
+#email	         : ines.carrasquer@unige.ch
+#date            : 20.01.2025
+################################################
+
+### Perform SNP calling
+
+for k in Stethophyma_grossum Oedipoda_germanica Oedipoda_caerulescens Psophus_stridulus
+    do
+
+    #Prepare data. Only samples that passed to phylogeny
+    grep ${k} list_sample_phylogeny | cut -d ">" -f2 | cut -d "-" -f1,2 > temp_list_samples
+    j=$(echo Schistocerca)
+    for i in $(cat temp_list_samples); do ln -s ../../MAPPING/CRAM2/${j}-${i}_q20_rg_sorted_UCE.cram* . ; done
+
+    # Prepare the reference
+    bwa index ${j}_chr.fasta
+    java -jar picard.jar CreateSequenceDictionary \
+        R=${j}_chr.fasta O=${j}_chr.dict
+    samtools faidx ${j}_chr.fasta
+
+    #SNP calling
+    ls *.cram | grep UCE > list_bam
+    freebayes -f ${j}_chr.fasta -L list_bam > ${k}_UCE.vcf
+
+    #SNP filter
+    vcftools --vcf ${k}_UCE.vcf --min-alleles 2 --max-alleles 2 --max-missing 0.6 --missing-indv --out ${k}_snpbi_miss06 
+    awk '$5 < 0.85 {print $1}' ${k}_snpbi_miss06.imiss > list_keep
+    vcftools --vcf ${k}_UCE.vcf  --min-alleles 2 --max-alleles 2  --max-missing 0.85 --minQ 100 --keep list_keep --out ${k}_snpbi_miss85_s85_nohw_nomaf --recode
+    ./vcf2structure_gn.sh ${k}_snpbi_miss85_s85.recode.vcf
+
+    done
+
+### Perform PCA and k-mean clustering
+
+metadata = read.delim("All_samples_metadata.csv", sep=",") 
+
+for (j in 1:nrow(data_it)) {
+  #Load
+  data<-read.structure(paste0("vcf/",data_it$file[j]),n.ind=data_it$samples[j],
+                       n.loc=data_it$snp[j],onerowperind=FALSE,col.lab=1,
+                       col.pop=NULL,col.others=NULL,row.marknames=0,
+                       NA.char=-9,ask=F,) 
+
+  #Verification
+  is.genind(data)
+  
+  #Substitute NA by mean
+  sansna<-scaleGen(data,scale=F, NA.method="mean")
+  
+  #LaunchPCA 
+  pca1 <- dudi.pca(sansna,cent=F,scale=F,scannf=FALSE,nf=4)
+  
+  #Variance explained by axes
+  barplot(pca1$eig[1:10],main="PCA eigenvalues", col=heat.colors(50))
+    
+  pca_pos=pca1$li %>% mutate(LAB_LABEL=rownames(pca1$li)) %>%
+    left_join(metadata, relationship = "many-to-many") %>%
+    select(Axis1, Axis2, Axis3, Axis4, LAB_LABEL, SPECIES, Biogeo) 
+
+
+  
+#K means  
+  k.max <- 10 # Maximal number of clusters 
+  data <- pca1$li[,c(1,2)]
+  wss <- sapply(1:k.max, 
+                function(k){kmeans(data, k, nstart=100)$tot.withinss}) 
+  plot_silhouette=fviz_nbclust(data, kmeans, method = "silhouette", k.max=k.max)+ 
+    theme(text=element_text(size=19))
+  nbC <- 7 # the optimal number
+  kmeans_result <- kmeans(pca1$li[,c(1,2)], centers = nbC) 
+  
+  temp_data=left_join(unique(pca_pos), data.frame(LAB_LABEL=names(kmeans_result$cluster),
+                                                    Cluster=as.factor(kmeans_result$cluster)))%>%
+    left_join(all_coor_new)
+  
+  plot_pca_kmeans=ggplot(temp_data) + 
+    geom_jitter(aes(x=Axis1,y=Axis2, color=Cluster, shape=SPECIES), size=7) +
+    ggforce::geom_mark_ellipse(aes(x=Axis1,y=Axis2,fill = Cluster,
+                                   color = Cluster)) +
+      ggtitle(paste0("Kmeans ",data_it$title[j])) +
+    ggrepel::geom_text_repel(aes(x=Axis1,y=Axis2), label=temp_data$LAB_LABEL, colour="black", size=5) +
+    labs(x = paste0("PC1 ",str_sub(pca1$eig[1],1,5), "%"),
+         y = paste0("PC2 ",str_sub(pca1$eig[2],1,5), "%")) + 
+    scale_color_brewer(palette = "Dark2") +
+    scale_fill_brewer(palette = "Dark2")+
+    #scale_color_manual(values = c25) +
+    scale_shape_manual(values=c(19,17,15,3,7,8,25)) +
+    theme_bw() + 
+    theme(text=element_text(size=19))
+  print(plot_pca_kmeans)
+    
+
+  plot_map_kmeans=ggplot(biogeo_regions_simple)   + geom_sf() + 
+    geom_point(data=temp_data,aes(x=CX, y=CY, colour=Cluster), size=7) + 
+    scale_color_brewer(palette = "Dark2") +
+    ggrepel::geom_text_repel(data=temp_data,aes(x=CX, y=CY+0.1), label=temp_data$LAB_LABEL, size=5) +
+    ggtitle(paste0("Kmeans ",data_it$title[j])) + theme_minimal()+ 
+    theme(text=element_text(size=19))
+  print(plot_map_kmeans)
+  
+}
+              
