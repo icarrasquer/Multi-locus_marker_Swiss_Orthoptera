@@ -1,0 +1,317 @@
+################################################
+#title           : Genetic diversity estimation
+#description     : This script combine all scripts for the genetic diversity estimation using UCE and USCO and further analysis
+#author		       : Inés Carrasquer Puyal
+#email	         : ines.carrasquer@unige.ch
+#date            : 20.01.2025
+################################################
+
+### Map samples against itself and perform the snp calling
+
+for i in $(list_sample)
+    do
+    
+    ln -s /data/work/Ortho_SwissBol/Samples/Final_dataset/demux/ALL_SAMPLES_UNIQUE/clean_demux-${i}_R{1,2}_.paired.fastq .
+    
+    # Prepare the reference (Only USCO and USCO)
+    cat ${i}*fasta | sed -e 's/'${i}'-//g' -e 's/>.*rDNA/>rDNA/' > temp_ref.fasta
+    bwa index temp_ref.fasta
+    java -jar /home/ines/envpicard/share/picard-2.22.1-0/picard.jar CreateSequenceDictionary \
+        R= temp_ref.fasta O= temp_ref.dict
+    samtools faidx temp_ref.fasta
+
+    # Map the samples
+    bwa mem temp_ref.fasta clean_demux-${i}_R1_.paired.fastq clean_demux-${i}_R2_.paired.fastq > ${i}_on_itself.sam
+
+    # Prepare the BAM file
+    samtools view -S -bF 4 -q 20 ${i}_on_itself.sam > temp0.bam
+    samtools addreplacerg -r "@RG\tID:${i}\tSM:${i}" temp0.bam -o temp.bam
+    samtools sort temp.bam -o ${i}_on_itself.sorted.bam
+    samtools index ${i}_on_itself.sorted.bam
+    rm ${i}_on_itself.sam
+    rm ${i}_on_itself.sorted.bam
+
+    # Extract regions corresponding to UCE and USCO
+    #Get loci
+    grep ${i} ../PHYLOGENIES_cov3/${j}/*_orthoskimclean.fasta | cut -d":" -f1,2  | cut -d"_" -f3 | sort -u > temp
+    grep -Ff temp ${j}_corresp | cut  -f2  > temp_list_lociclean
+        
+    grep -Ff temp_list_lociclean ../CONSENSUS_cov3/${j}-${i}_contigs.fasta |cut -d">" -f2 > temp_names
+    cat temp_names | cut -d":" -f2 | cut -d"_" -f1 | awk -F"-" '{print "0\t"$2-$1}' > temp_length
+    paste temp_names  temp_length > temp.bed
+    #Subset bam file
+    samtools view -L temp.bed -b ${i}_on_itself.sorted.bam > ${i}_on_itself_UCE.sorted.bam
+
+
+    # Snp calling
+    gatk HaplotypeCaller -R temp_ref.fasta -O ${i}_on_itself_UCE.vcf -I ${i}_on_itself_UCE.sorted.bam
+    # Filter biallelic SNP; no indels
+    vcftools --vcf ${i}_on_itself_UCE.vcf --min-alleles 2 --max-alleles 2 --remove-indels --recode  --out ${i}_on_itself_snpbi_UCE.vcf
+    
+    rm temp*
+
+done
+
+
+### Extract nb of SNP in introns and exons
+
+for j in Genome_ref1 Genome_ref2
+    for i in $(cat list_sample)
+        do
+        cut -f1 ${i}_on_itself_snpbi_UCE.vcf | grep -v "#" | sort -u | cut -d"_" -f2 > list_loci
+        samtools depth ${i}_on_itself.sorted.bam > temp_depth_file
+
+        while read a
+            do
+            uce=$(grep ${a} ${j}_corresp | cut -f1 | sort | head -n1)
+            region=$(grep ${a} ${i}_on_itself_snpbi_UCE.vcf | grep -v "#" | cut -f1)
+            start=$(echo ${a} | cut -d ":" -f2 | cut -d"-" -f1)
+            echo ${a} | tr ":" "\t" | tr "-" "\t" > temp.bed
+
+            #Create bed of exon and intron
+            bedtools intersect -a temp.bed -b ${j}_chr_annotation.sorted.exons.bed | sort -u | awk  -v start="${start}"  -v region="${region}" 'BEGIN{OFS="\t"} {print region,$2-start,$3-start}' | awk  '$2!=""' | awk 'BEGIN {OFS="\t"}{if ($2<0) {print $1,"0",$3} else {print $0}}' | awk 'BEGIN {OFS="\t"}{if ($3 < 0){print $1,$2,"0"} else {print $0}}'> temp_exon.bed
+            bedtools intersect -a temp.bed -b ${j}_chr_annotation.sorted.introns.bed | sort -u | awk  -v start="${start}"  -v region="${region}" 'BEGIN{OFS="\t"} $2 > start {print region,$2-start,$3-start}' | awk  '$2!=""' | awk 'BEGIN {OFS="\t"}{if ($2<0) {print $1,"0",$3} else {print $0}}' | awk 'BEGIN {OFS="\t"}{if ($3 < 0){print $1,$2,"0"} else {print $0}}' > temp_intron.bed
+
+
+            #Extract the nb of SNP and lenght of each intron/exon
+            if [ -s temp_exon.bed ]
+                then
+                SNP_exon=$(bedtools intersect -a ${i}_on_itself_snpbi_UCE.vcf -b temp_exon.bed | grep "0/1" | wc -l )
+                rm sum_length
+                for j in $(seq 1 $(wc -l temp_exon.bed | cut -f1 -d" "))
+                    do
+                    line=$(sed -n ''${j}' p' temp_exon.bed)
+                    start1=$(echo ${line} | cut -f2 -d" ")
+                    end1=$(echo ${line} | cut -f3 -d" ")
+                    grep ${a} temp_depth_file | awk -v start=${start1} -v end=${end1} '$2 >= start && $2 <= end {print$0}' | awk '$3>6{print $0}' | wc -l  >> sum_length
+                    done
+                LENGTH_exon=$(awk '{s+=$1} END {print s}'  sum_length)
+                echo ${i}";"${uce}";"${SNP_exon}";"${LENGTH_exon}";exon" >> Summmary_genomic_features_04112024
+                fi
+
+            if [ -s temp_intron.bed ]
+                then
+                SNP_intron=$(bedtools intersect -a ${i}_on_itself_snpbi_UCE.vcf -b temp_intron.bed | grep "0/1" | wc -l )
+                rm sum_length
+                for j in $(seq 1 $(wc -l temp_intron.bed | cut -f1 -d" "))
+                    do
+                    line=$(sed -n ''${j}' p' temp_intron.bed)
+                    start1=$(echo ${line} | cut -f2 -d" ")
+                    end1=$(echo ${line} | cut -f3 -d" ")
+                    grep ${a} temp_depth_file | awk -v start=${start1} -v end=${end1} '$2 >= start && $2 <= end {print$0}' | awk '$3>6{print $0}' | wc -l  >> sum_length
+                    done
+                LENGTH_intron=$(awk '{s+=$1} END {print s}'  sum_length)
+                echo ${i}";"${uce}";"${SNP_intron}";"${LENGTH_intron}";intron" >> Summmary_genomic_features
+                fi
+
+            done < list_loci
+
+            #Keep only loci used for phylogenic inference
+            grep -Ff <(grep -Ff list_loci_2_${j}_phylo_N80 ${j}_corresp | cut -f1) Summmary_genomic_features  >> Summmary_genomic_features_loci_subset
+
+
+        done
+    done
+
+# Remove museum collection samples
+sort -k1,1 ../../../All_samples_metadata.txt | sed -n '700,750 p' | cut -f1 | sort -u > list_not_gen_div
+grep -Fvf list_not_gen_div Summmary_genomic_features_loci_subset > temp
+mv temp Summmary_genomic_features_loci_subset
+
+### Estimate % of polymorphic sites per individual, considering only exonic regions
+
+library(tidyverse)
+library(corrr)
+library(ggcorrplot)
+library(factoextra)
+library(gridExtra)
+library(broom)
+
+metadata_fauna_ind=read.csv("Fauna_Indicativa_Ortho.csv") %>% mutate_if(is.numeric,as.factor)
+metadata_coordinates = read.delim(file = "metadata_coordinates", header = T) 
+
+#Data divided by genomic features
+data_ggf_loci = read.delim(file = "Summmary_genomic_features_loci_subset", sep = ";", header = F) # Schistocerca
+metadata_figures = read.delim(file = "metadata_figures", sep = ";", header = T)
+
+data_all_sp =  data_ggf_loci %>% filter(GF=="exon")  %>% group_by( Sample,  Loci_subset ) %>%  
+  summarise(SNP_sum = sum(SNP),
+            Length_sum = sum(Length),
+            Nb_uce=n_distinct(Uce)) %>% filter(Length_sum >0)  %>% 
+  mutate(Het_total= SNP_sum/Length_sum*100 )  %>% 
+  filter(!(is.na(Het_total))) %>% 
+  filter(Species !="Saga_pedo") %>% left_join(metadata_figures) %>% 
+  filter(!is.na(Sample)) %>% group_by(Species) %>% 
+  filter(Het_total >0) %>% filter(Species %in% list_sp$Species) %>%
+  summarise(Het_total_mean=mean(Het_total)) %>% left_join(metadata_fauna_ind)
+
+#Convert necessary columns to numeric
+data_pca[, 1:8] <-lapply(data_pca[, 1:8], function(x) as.numeric(as.character(x)))
+
+#Handling missing values
+if (any(is.na(data_pca))) {
+  data_pca <- na.omit(data_pca) 
+}
+
+#Calculate the correlation matrix
+correlation_matrix <- cor(data_pca %>% select(-Het_total_mean), use = "complete.obs")
+print("Correlation Matrix:")
+print(correlation_matrix)
+
+#Visualize the correlation matrix
+corrplot::corrplot(correlation_matrix, method = "color", type = "upper", 
+                   tl.col = "black", tl.srt = 45, addCoef.col = "black")
+
+#Selecting the relevant variables for PCA
+data_pca=data_all_sp %>% select(IUCN_Status_nb, Habitat_Specialization,
+                                Riparian_Indicator_Species_Status, Dry_Meadows_and_Pastures_Indicator_Species_Status,
+                                Dispersal_Potential, Termophilic_Preference, Elevation_level, Het_total_mean)
+
+### Perform PCA
+data.pca <- princomp(scale(data_pca))
+
+plot_pca = fviz_pca_var(data.pca, axes = c(1,2), col.var = "black") +
+  ggtitle("") +theme(panel.grid.major = element_blank(),
+                     panel.grid.minor = element_blank())
+
+plot_eigenvalues = fviz_eig(data.pca,addlabels = TRUE) 
+
+
+### GLM with a Gamma distribution and log link
+glm_model <- glm(Het_total_mean ~   IUCN_Status_nb + Habitat_Specialization +
+                   Elevation_level + Riparian_Indicator_Species_Status+  Dry_Meadows_and_Pastures_Indicator_Species_Status +
+                   Dispersal_Potential + Termophilic_Preference ,
+                   #Elevation_level*Dry_Meadows_and_Pastures_Indicator_Species_Status,
+                   #Riparian_Indicator_Species_Status*Habitat_Specialization +
+                   #Riparian_Indicator_Species_Status*Dispersal_Potential +
+                   #Riparian_Indicator_Species_Status*Dispersal_Potential*Habitat_Specialization, 
+                 data = data_test, family = Gamma(link = "log"))
+summary(glm_model)
+
+### Heatmap Riparian species status vs IUCN status
+riparian_labels <- c("1" = "Not", "2" = "Hardly", "3" = "Considerably", 
+                     "4" = "Predominantly", "5" = "Exclusively")
+
+plot_heatmap = data_all_sp %>% filter(!is.na(Het_total_mean)) %>% 
+  filter(!is.na(Riparian_Indicator_Species_Status)) %>%
+  filter(!is.na(IUCN_Status_nb)) %>%
+  group_by(IUCN_Status_nb, Riparian_Indicator_Species_Status) %>%
+  summarise(mean2 = mean(Het_total_mean), 
+            unique_species_count = n_distinct(Species), 
+            .groups = "drop") %>%  
+  mutate(IUCN_Status_nb = factor(IUCN_Status_nb, levels = c("1", "2", "3", "4", "5"), 
+    labels = c("LC", "NT", "VU", "EN", "CR"), ordered = TRUE)) %>%
+  ggplot( aes(x = factor(Riparian_Indicator_Species_Status), y = factor(IUCN_Status_nb), fill = mean2)) +
+  geom_tile(color = "white") +  # Adds a white border between tiles
+  scale_fill_gradient(low = "lightblue", high = "darkblue", name = "Percentage \npolymorphic sites") + 
+  geom_text(aes(label = unique_species_count), color = "black", size=5) +  
+  labs(x = "Riparian indicator species", y = "IUCN conservation status", ) +
+  theme_minimal() +
+  theme( text= element_text(size=15),
+    axis.text.x = element_text(angle = 45, hjust = 1))+
+  scale_x_discrete(labels = riparian_labels) 
+
+### Plot percentage heterozygous position per species
+plot_het_mean_sp = data_all_sp  %>%
+  filter(!is.na(Het_total_mean)) %>%  
+  arrange(IUCN_Status_nb, Het_total_mean) %>%  
+  mutate(Species = factor(Species, levels = Species, ordered = T)) %>%
+  ggplot() + geom_point(aes(y= Het_total_mean, x=Species)) + theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, face = "italic"))  +
+  labs(y = "Percentage of polymorphic sites") 
+
+### Plot of km2 covered by the sampling per species versus percentage of polymorphic sites per species
+
+t1=data_all_sp %>% ungroup %>% select(Species, Het_total_mean) 
+  mutate(Het_total_mean_perc= Het_total_mean)
+
+t2= metadata_figures %>% 
+  left_join(metadata_coordinates)  %>%  ungroup %>% group_by(Species) %>% 
+  summarise (Cxmin = as.numeric(min(CX)),
+             Cxmax = as.numeric(max(CX)),
+             Cymin = as.numeric(min(CY)),
+             Cymax = as.numeric(max(CY)),
+             Area= as.numeric((Cxmax - Cxmin)*(Cymax - Cymin))/1000000) %>% 
+  select(Species, Area) %>% filter (!is.na(Area), Area >0)
+
+data_km2=left_join(t1,t2) 
+
+#Fit the regression model
+model <- lm(Het_total_mean_perc ~ Area, data = data_km2)
+
+#Extract R-squared and p-value
+model_stats <- glance(model)
+r2 <- round(model_stats$r.squared, 3)
+pval <- signif(model_stats$p.value, 3)
+
+#Create the plot with annotations
+plot_area_vs_perc_polymorphic_sites <- left_join(t1, t2) %>%
+  ggplot(aes(y = Het_total_mean_perc, x = Area)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  theme_minimal() +
+  labs(y = "% Polymorphic sites", x = "Area (km²)") +
+  annotate("text", x = max(t2$Area) * 0.6, y = 0.9,
+           label = "paste(italic(r)^{2}, \" = 0.015, \",italic(p), \" = 0.31\")",
+           size = 4, color = "black", hjust = 0, parse=T)
+
+### Variant annotation
+
+# Create vcf with all positions found in all individuals
+for j in Genome_ref1 Genome_ref2
+    do
+    #Create the header
+    grep -E '##file|##FILTER|##FORMAT|##GATKCommandLine' ORT-314_on_itself_snpbi_UCE.vcf > all_ind_het_pos.vcf
+    awk '{print "##contig=<ID="$1",length="$3">"}' ${j}_long.bed >> all_ind_het_pos.vcf
+    grep -E '##source|##bcftools_' ORT-314_on_itself_snpbi_UCE.vcf >> all_ind_het_pos.vcf
+    grep "#C" ORT-314_on_itself_snpbi_UCE.vcf  >> all_ind_het_pos.vcf
+
+    cat *_snpbi_UCE.vcf | grep -v "#" |grep "0/1"> body.vcf
+    awk -F"_" '{print $2,$3}' body.vcf | sed -e "s/:/\t/" -e "s/-/\t/" | awk 'BEGIN{OFS="\t"} {print $1,$2+$4,$5,$6,$7,$8,$9,$10,$11,$12}'  | sort -k1,1 -k2,2n >body2.vcf
+
+    cut -f1,2,4,5 body2.vcf   | sort -u > list_pos
+
+    while read a
+        do
+        chr=$(echo $a | cut -f1 -d " ")
+        pos=$(echo $a | cut -f2 -d " ")
+        ref=$(echo $a | cut -f3 -d " ")
+        alt=$(echo $a | cut -f4 -d " ")
+
+        grep ${chr} body2.vcf | grep ${pos} | awk -v ref=${ref} -v alt=${alt} '$4 == ref && $5 == alt {print $0}'  | sort -k6,6 -n | tail -n1 >> all_ind_het_pos.vcf
+
+        done < list_pos
+    done
+
+#Run VariantAnnotation
+library(ShortRead)
+library(GenomicFeatures)
+library(VariantAnnotation)
+
+vcf_all <- readVcf("all_ind_het_pos.vcf")
+txdb <- makeTxDbFromGFF("Genome_ref1_long_annotation_variantannotation.gff", format="gff")
+
+rd <- rowRanges(vcf_all)
+loc <- locateVariants(rd, txdb, CodingVariants())
+
+table(mcols(loc)$LOCATION)
+splt <- split(mcols(loc)$GENEID, mcols(loc)$QUERYID) 
+
+results=predictCoding(query=vcf_all, subject=txdb, seqSource=FaFile("Gryllus_long.fasta", "Gryllus_long.fasta.fai"))
+table(mcols(results)$CONSEQUENCE)
+
+idx <- mcols(results)$CONSEQUENCE == "nonsynonymous"
+nonsyn <- results[idx]
+length(unique(names(nonsyn)))
+write.table(unique(names(nonsyn)),"list_post_nonsyn.txt",row.names=F)
+
+idx <- mcols(results)$CONSEQUENCE == "synonymous"
+syn <- results[idx]
+length(unique(names(syn)))
+write.table(unique(names(syn)),"list_post_syn.txt",row.names=F)
+
+idx <- mcols(results)$CONSEQUENCE == "nonsense"
+nonsense <- results[idx]
+length(unique(names(nonsense)))
+write.table(unique(names(nonsense)),"list_post_nonsense.txt",row.names=F)
+

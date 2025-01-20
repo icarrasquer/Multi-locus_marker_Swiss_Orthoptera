@@ -1,0 +1,143 @@
+################################################
+#title           : Orthology inference
+#description     : This script combine all scripts of orthology inference of UCE and USCO. 
+#author		     : Inés Carrasquer Puyal
+#email	         : ines.carrasquer@unige.ch
+#date            : 20.01.2025
+################################################
+
+### BUSCO
+
+
+### PHYLUCE
+#Follow https://phyluce.readthedocs.io/en/latest/tutorials/tutorial-3.html
+
+### Mapping probes
+
+
+#Map the probes
+for i in Genome_ref1 Genome_ref2
+    do
+    bwa mem ../${i}/${i}*.fasta ../nuclear_reference.fasta > ${i}-probes.sam
+    samtools view -h -b -S ${i}-probes.sam > ${i}-probes.bam
+    done
+
+#Produce a clean bed for the UCE/USCO
+for i in Genome_ref1 Genome_ref2
+    do
+    file=$(echo ${i}-probes)
+    samtools sort ${file}.bam -o ${file}_sorted.bam
+    samtools index ${file}_sorted.bam
+    samtools view -h ${file}_sorted.bam -L ../${i}/${i}*.bed | samtools sort > temp.bam
+    bedtools bamtobed -i temp.bam | cut -f1,2,3 > temp_1
+    bedtools bamtobed -i temp.bam | awk -F"-u" '{print "u"$2}' > temp_2
+    paste temp_1 temp_2 > ${file}.bed
+
+    #Clean badly mapped regions
+    bedtools sort -i ${file}.bed | bedtools merge -c 4 -o distinct > ${file}_uce_usco.bed
+    cut -f4 ${file}_uce_usco.bed | sort | uniq -c  | sort -k1,1 -n | awk '$1 > 1 {print $2}' > ${i}_bad_uce_usco
+    grep -Fvf ${i}_bad_uce_usco ${file}_uce_usco.bed > ${file}_uce_usco_good.bed
+    done
+
+### Loci aligment with probes
+
+#Align the sequences with the all probes one by one
+
+for j in Genome_ref1 Genome_ref2
+    do
+    #Extract all the sequences that have reads mapped to the ref. genome
+    mkdir ${j}
+    cd ${j}
+
+    cut -f4 ${j}_ALL.bed > temp_regions
+    grep -Fvf <(cut -f1 ../${j}_ALL_uce_usco) temp_regions > regions_not_identified
+    cat regions_not_identified ../${j}_ALL_uce_usco > all_regions
+    cut -f1 all_regions > temp_regions
+    samtools faidx -r temp_regions /data/work/Ortho_SwissBol/Samples/Final_dataset/Genomes/${j}/${j}_chr.fasta > temp_${j}_all_regions.fasta
+    
+    #Obtain 20 higher values of distance
+    for i in $(grep ">" ${j}_all_regions.fasta | cut -d">" -f2)
+        do
+        #Get one sequence
+        echo ${i} > temp_seq
+        fastaselect.pl ${j}_all_regions.fasta temp_seq > temp_${i}.fasta
+        cat temp_${i}.fasta | sed "1s/.*/>seq1/" > temp_${i}2.fasta
+        cat temp_${i}2.fasta ../nuclear_reference.fasta > temp.fasta
+        #Align with the probes
+        mafft  --auto --reorder --adjustdirection temp.fasta > temp_align.fasta
+        #Obtain distance
+        distmat -sequence temp_align.fasta -nucmethod 0 -outfile temp_dist 
+        nb_col=$(($(grep -c ">" temp_align.fasta) + 1 ))
+        sed -n 9p temp_dist | cut -f2-${nb_col} | tr "\t" "\n"  > temp_values
+        nb_col2=$((${nb_col} + 2 ))
+        cut -f${nb_col2} temp_dist | sed '1,8d' | rev | cut -d "-" -f1,2 | rev | cut -d" " -f1 > temp_sequences
+        paste temp_values temp_sequences | sort -k1,1 -n | grep -v "nan" | grep -v "seq1"| head -n20 > temp_file
+        region=$(echo $i | rev | cut -d"_" -f2,3 | rev)
+        uce_usco=$(echo $i | rev | cut -d"_" -f1 | rev)
+
+        if [ -z ${uce_usco} ]
+        then
+        head -n 5 temp_file | awk 'BEGIN{OFS="\t"}{print $1,$2,"'${region}'", "'${uce_usco}'"}' >> ${j}.dist
+        else
+        head -n 20 temp_file | awk 'BEGIN{OFS="\t"}{print $1,$2,"'${region}'", "'${uce_usco}'"}' >> ${j}.dist
+        fi
+  
+        rm temp*
+        done
+    cd /data/work/Ortho_SwissBol/Samples/Final_dataset/Genomes/Orthology/
+    done
+
+
+#Align the sequences with the best UCE/USCO probes one by one
+
+for j in Genome_ref1 Genome_ref2
+    do
+    for i in $(cut -f1 all_regions)
+        do
+        #Get list of UCE/USCO with at least one UCE/USCO less than 45 dist
+        grep ${i} ${j}.dist |sort -k1,1 -n | awk '$1 < 45 {print $2}' | rev | awk -F"_" '{print $1}' | rev | sort | uniq > temp_45_uceusco
+        if [ -s temp_45_uceusco ]
+            then
+            #Get the region
+            grep ${i} ${j}_all_regions.fasta | cut -d ">" -f2 | sort | uniq > temp_seq
+            fastaselect.pl ${j}_all_regions.fasta temp_seq > temp0.fasta
+            seqkit rmdup -s temp0.fasta > temp00.fasta
+            cat temp00.fasta | sed "1s/.*/>seq1/" > temp.fasta
+            #Get the probes
+            grep -Ff temp_45_uceusco ../nuclear_reference.fasta | cut -d ">" -f2 > temp_seq2
+            fastaselect.pl ../nuclear_reference.fasta temp_seq2 >> temp.fasta
+            #Align with the probes
+            mafft  --auto --reorder --adjustdirection temp.fasta > temp_align.fasta
+            #Obtain distance
+            distmat -sequence temp_align.fasta -nucmethod 0 -outfile temp_dist 
+            nb_col=$(($(grep -c ">" temp_align.fasta) + 1 ))
+            sed -n 9p temp_dist | cut -f2-${nb_col} | tr "\t" "\n"  > temp_values
+            nb_col2=$((${nb_col} + 2 ))
+            cut -f${nb_col2} temp_dist | sed '1,8d' | rev | cut -d "-" -f1,2 | rev | cut -d" " -f1 > temp_sequences
+            paste temp_values temp_sequences | sort -k1,1 -n | grep -v "nan" > temp_file
+            region=$(echo ${i} | awk -F"_u" '{print $1}')
+
+            awk 'BEGIN{OFS="\t"}{print $1,$2,"'${region}'"}' temp_file | grep -v seq1 >> ${j}_45_uceusco_align.dist
+            #Produce file with final correspondance --> Keep only dist lower than 30
+            awk 'BEGIN{OFS="\t"}{print $1,$2,"'${region}'"}' temp_file | grep -v seq1 | awk '$1 < 30 {print $2"\t"$3}' | sort -u >> ${j}_corresp_45_realign_30
+            cp temp_align.fasta ${i}_45_uceusco_align.fasta
+
+            fi
+        rm temp*
+        cat ${j}_corresp_45_realign_30 | sort | uniq > temp
+        mv temp ${j}_corresp_45_realign_30
+
+        #Keep only uce/usco assigned only once
+        cat ${j}_corresp_45_realign_30 | awk '{print $1}' | sort | uniq -c | awk '{ if ( $1 < 2 ) print $2}' > list_uce_usco_uniq
+        grep -Ff list_uce_usco_uniq ${j}_corresp_45_realign_30  > ${j}_corresp_45_realign_30_unique
+        
+        done
+
+
+### Create single orthology inference file (*_corresp) per genome
+
+for j in Genome_ref1 Genome_ref2
+    do
+    cat ${j}_output_busco ${j}_output_phyluce ${j}-probes_uce_usco_good.bed ${j}_corresp_45_realign_30_unique > ${j}_corresp
+    done
+
