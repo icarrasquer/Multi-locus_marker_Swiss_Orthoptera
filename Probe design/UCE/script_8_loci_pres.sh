@@ -1,7 +1,4 @@
 #! /bin/bash
-#Folder: bed
-
-source /local/anaconda3/bin/activate /home/jeremy/local/envphyluce
 
 #DETERMINING LOCUS PRESENCE IN MULTIPLE GENOMES
 phyluce_probe_get_multi_merge_table \

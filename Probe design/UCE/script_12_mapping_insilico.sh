@@ -1,7 +1,4 @@
 #! /bin/bash
-#Folder probes-design-test
-
-source /local/anaconda3/bin/activate /home/jeremy/local/envphyluce
 
 #Map
 mkdir -p orthoptera-genome-lastz

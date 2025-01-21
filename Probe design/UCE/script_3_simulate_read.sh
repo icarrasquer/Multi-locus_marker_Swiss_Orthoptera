@@ -1,8 +1,5 @@
 # !/bin/bash
-#Folder: reads
 
-
-source /local/anaconda3/bin/activate /home/ines/envart
 for i in `ls ../genomes`
     do
         art_illumina \

@@ -1,7 +1,4 @@
 #! /bin/bash
-#Folder: probe-design
-source /local/anaconda3/bin/activate /home/jeremy/local/envphyluce
-
 
 phyluce_probe_get_tiled_probe_from_multiple_inputs \
     --fastas orthoptera-genome-fasta \

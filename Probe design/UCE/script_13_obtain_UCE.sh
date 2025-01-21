@@ -1,8 +1,4 @@
 #! /bin/bash
-#Folder probes-design-test/taxon-sets/insilico-incomplete
-
-source /local/anaconda3/bin/activate /home/jeremy/local/envphyluce
-
 
 #Get the UCE fasta
 cd taxon-sets/insilico-incomplete

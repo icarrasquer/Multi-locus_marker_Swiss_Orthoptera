@@ -1,8 +1,6 @@
 #! /bin/bash
 #Folder probes-design-test/taxon-sets/insilico-incomplete/mafft-gblocks-clean
 
-source /local/anaconda3/bin/activate /home/jeremy/local/envamas/
-
 for i in `ls *.nexus`
     do
 
@@ -23,9 +21,6 @@ awk '$2 > 5' list_nseq_lenght_varsites | awk '$3 > 119' | awk '$4 < 0.5'  > list
 
 #Trim Time_mo and sort 
 
-source /local/anaconda3/bin/activate /home/ines/envgoalign
-
-
 for i in `ls *.nexus`
     do
     name=`echo $i | sed -e 's/.nexus//g'`
@@ -35,16 +30,11 @@ for i in `ls *.nexus`
 
 #Obtain pairwise matrix and select those UCE with 10% max of divergence within Ensifera ou Caelifera
 
-source /local/anaconda3/bin/activate /home/jeremy/local/envemboss/
-
 for i in `ls *-sort.nexus`
     do
     name=`echo $i | sed -e 's/-sort.nexus//g'`
     distmat -sequence "$i" -outfile "$name"-sort-table -nucmethod 3
     done
-
-
-
 
 while read a
     do
@@ -68,8 +58,6 @@ awk '($2 == 1 && $3 == 1)' list_UCE_n10 | wc -l
 
 
 #Extract fasta secuences
-
-source /local/anaconda3/bin/activate /home/jeremy/local/envemboss/
 
 for i in `ls *nexus`
     do

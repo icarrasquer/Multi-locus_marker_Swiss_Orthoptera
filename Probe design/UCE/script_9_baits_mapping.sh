@@ -1,9 +1,6 @@
 #! /bin/bash
-#Folder: probe-design
 
 mkdir -p orthoptera-genome-lastz
-
-source /local/anaconda3/bin/activate /home/jeremy/local/envphyluce
 phyluce_probe_run_multiple_lastzs_sqlite \
     --probefile ../bed/Teleo_oc+5.temp-DUPE-SCREENED.probes \
     --scaffoldlist Gri_bi Laupa_ko Locus_mi Teleo_oc Time_mo Vandi_vi Xeno_bra \

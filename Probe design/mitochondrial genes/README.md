@@ -3,10 +3,9 @@
 
 ## Complete mitochondrion available for Orthoptera
 07.02.2022
-Download 245 orthoptera mitogenomes. 200 belong to Orthoptera 7 families present in Switzerland ( there are 8 Orthoptera families)
+Download 245 orthoptera mitogenomes. 200 belong to Orthoptera 7 families present in Switzerland ( there are 7 Orthoptera families), 5 of Swiss species.
 
 Acrididae 126 -> 10 -> 2
-Catantopidae 0
 Gryllidae 20 -> 10 -> 1
 Gryllotalpidae 3 -> 1
 Rhaphidophoridae 3
@@ -14,15 +13,13 @@ Tetrigidae 6 -> 4
 Tettigoniidae 41 -> 10 -> 1
 Tridactylidae 1
 
-Initally, we infered the phylogeny of the more abundant families (Acrididae, Gryllidae, Tettigoniidae). For them, we selected 10 mitochondria, prioritising swiss sp or european genus.
 
-At the very end, 
-Extract only one per family
+We selected one representant per family
 
-| Family           | NCBI Code        |
+| Family           | NCBI Code   |
 |------------------|-------------|
 | Gryllotalpidae   | NC_006678.1 |
-| Rhaphidophoridae | NC_011306.1  |
+| Rhaphidophoridae | NC_011306.1 |
 | Tetrigidae       | NC_018543.1 |
 | Tridactylidae    | NC_014488   |
 | Gryllidae        | NC_034799.1 |
@@ -52,4 +49,3 @@ Extraction of genes (getfasta) and **script_alignment_to_probes.sh**
 | ND6      | 495     | 
 | Total    | 11121   | 
 
-The probes needed to be of 170 bp to not exceed 500 probes, which would imply an increase of the price. 

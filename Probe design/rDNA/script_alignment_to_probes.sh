@@ -1,9 +1,11 @@
 #! /bin/bash
 #Script cuting genes into probes of 130 bp including the T7 promoter
+
 # $1 fasta file of complete sequences (genes + intergenic seq) 
-FASTA=`echo $1 | sed -e 's/.fasta//'`
+FASTA=$(echo $1 | sed -e 's/.fasta//')
 sed $'s/[^[:print:]\t]//g' "$1" > temp.fasta
 cat temp.fasta > "$1"
+
 # $2 gff file of annotated genes in the $1 sequences
 GFF=`echo $2 | sed -e 's/.gff//'`
 sed $'s/[^[:print:]\t]//g' "$2" > temp.gff
@@ -17,10 +19,7 @@ awk -F "Name=" '{print $2}' "$2" | awk -F ";" '{print $1}' > temp2
 paste temp1 temp2 temp3 > "$GFF"_CDS.gff
 rm temp*
 
-source /local/anaconda3/bin/activate /home/ines/envbedtools
-
 bedtools getfasta -name -fi "$1" -bed "$GFF"_CDS.gff -fo "$FASTA"_CDS.fasta
-
 
 echo "Gene" "Length" "Nb probes" > "$FASTA"_probes_summary 
 while read a
@@ -30,8 +29,6 @@ while read a
 
     fastaselect.pl "$FASTA"_CDS.fasta temp  > "$FASTA"_CDS_"$a".fasta
     
-    source /local/anaconda3/bin/activate /home/jeremy/local/envemboss/  
-
     if [ `infoseq "$FASTA"_CDS_"$a".fasta |  awk '{print $6}' | awk 'NR == 8 {print; exit}'` -gt 200 ]
         #BIG genes
         then
@@ -49,12 +46,7 @@ while read a
         java -jar /home/ines/envpicard/share/picard-2.22.1-0/picard.jar BedToIntervalList I=temp_ref2.bed SD=temp_ref.dict O=temp_ref.interval_list
         java -jar /home/ines/envpicard/share/picard-2.22.1-0/picard.jar BaitDesigner R=temp_ref.fasta T=temp_ref.interval_list DESIGN_NAME="$FASTA"_CDS_"$a"_probes_folder BAIT_SIZE=130 RIGHT_PRIMER=CCCTATAGTGAGTCGTATTA LEFT_PRIMER=null BAIT_OFFSET=130
         
-
         #Create last probe
-
-        source /local/anaconda3/bin/activate /home/ines/envseqkit
-
-
         seqkit subseq -r -130:-1 "$FASTA"_CDS_"$a".fasta >  "$FASTA"_CDS_"$a"_last_probe.fasta
         sh ./script_addT7.sh "$FASTA"_CDS_"$a"_last_probe.fasta
         
@@ -76,21 +68,18 @@ while read a
         NB_PB=`grep -c ">" "$FASTA"_CDS_"$a"_ready.fasta`
 
     
-    fi    
-    ##Summary
-
-    source /local/anaconda3/bin/activate /home/jeremy/local/envemboss/  
-       
-
-    LEN=`infoseq "$FASTA"_CDS_"$a".fasta |  awk '{print $6}' | awk 'NR == 8 {print; exit}'`
-
-    
-    echo "$a" "$LEN" "$NB_PB" >> summary
-
+    fi
     rm temp_*
     done < "$3"
 
+### Add the T7 promoter
+for i in $(ls *fasta)
 
+    do
+    sample=$(echo $i | sed -e 's/.fasta//g')
+    cat "$i" | seqkit mutate -i 0:GTGACTGGAGTTCAGACG | seqkit mutate -i -1:AGAT > "$sample"_amplification.fasta
+
+    done
 
 
 
