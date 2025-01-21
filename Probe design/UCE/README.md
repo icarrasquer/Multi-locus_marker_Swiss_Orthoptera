@@ -1,4 +1,4 @@
-# Application of PHYLUCE pipeline on Orthoptera
+# Application of PHYLUCE pipeline in Orthoptera
 
 ![](UCE.png)
 

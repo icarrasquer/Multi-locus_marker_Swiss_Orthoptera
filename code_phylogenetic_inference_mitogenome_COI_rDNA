@@ -59,8 +59,6 @@ for i in $(ls *_trimal.fasta)
     done
 
 #Remove sequences with more than 40% of N
-source activate /home/ines/envseqtk
-
 for i in $(ls *_trimal.fasta)
     do
     name=$(echo ${i} | sed -e 's/.fasta//g')
@@ -68,8 +66,6 @@ for i in $(ls *_trimal.fasta)
     fastaselect.pl ${i} temp_list_keep > ${name}_N60.fasta
     rm temp_list_keep
     done
-
-conda deactivate
 
 #Paralog cleaning with Orthoskim
 #Give the compatible name for Orthoskim
@@ -176,17 +172,13 @@ iqtree2 -nt 2 -s concatenated.phylip -spp partitionfinder_best_scheme_partitions
 ### CO1 barcode 
 
 #Align
-source activate /home/jeremy/local/envmafft/
 mafft  --auto --reorder --adjustdirection locus_mito_COI_barcode.fasta > locus_mito_COI_barcode_align.fasta
-conda deactivate 
 #Homogenise mising values
 sed -e '/^>/!s/N/-/g' -e '/^>/!s/n/-/g' -e '/^>/!s/?/-/g' locus_mito_COI_barcode_align.fasta > temp_trim.fasta
 #Clean
-source activate /home/ines/envtrimal
 trimal -in temp_trim.fasta -out temp_trim2.fasta  -noallgaps  
 trimal -in temp_trim2.fasta -out locus_mito_COI_barcode_align_trimal.fasta -gt 0.6 -gw 5 # gt:  1 - (fraction of sequences with a gap allowed) gw: Window size only applies to statistics/methods based on Gaps.
 rm temp_trim*
-conda deactivate 
 
 #Add information 
 for i in $(ls locus_mito_COI_barcode_align_trimal.fasta)
