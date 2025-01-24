@@ -1,7 +1,7 @@
 ################################################
 #title           : Phylogenetic inference mitogenome COI rDNA
 #description     : This script combine all scripts for the phylogenetic inference using (i) mitogenome, (ii) COI barcode and (iii) rDNA. 
-#author		     : Inés Carrasquer Puyal
+#author	         : Inés Carrasquer Puyal
 #email	         : ines.carrasquer@unige.ch
 #date            : 20.01.2025
 ################################################
@@ -52,8 +52,8 @@ for i in $(ls *_trimal.fasta)
 
     while read a
         do
-        sp=$(grep -a ${a} /data/work/Ortho_SwissBol/Samples/Final_dataset/All_samples_metadata.txt | cut -f12| sort | uniq)
-        biogeo=$(grep -a ${a} /data/work/Ortho_SwissBol/Samples/Final_dataset/All_samples_metadata.txt | cut -f15| sort | uniq)
+        sp=$(grep -a ${a} All_samples_metadata.txt | cut -f12| sort | uniq)
+        biogeo=$(grep -a ${a} All_samples_metadata.txt | cut -f15| sort | uniq)
         sed -i "s/>${a}.*/>${a}-${sp}-${biogeo}/g" ${i}
         done < temp_samples
     done
@@ -118,10 +118,6 @@ for i in $(ls *_orthoskimclean.fasta)
 
 #Launch phylogeny
 AMAS.py concat -i *N80.fasta -f fasta -d dna -e
-
-grep ${j} /data/work/Ortho_SwissBol/Samples/Final_dataset/Genomes/PHYLOGENIES_cov3/list_sample_remove | cut -f1 -d " " > temp
-grep ">" concatenated.out | cut -d ">" -f2 >temp1
-grep -Fvf temp temp1 > temp3
 
 fastaselect.pl concatenated.out temp3 > contatenated_good_samples.out
 mv contatenated_good_samples.out concatenated.out
@@ -188,8 +184,8 @@ for i in $(ls locus_mito_COI_barcode_align_trimal.fasta)
 
     while read a
         do
-        sp=$(grep -a ${a} /data/work/Ortho_SwissBol/Samples/Final_dataset/All_samples_metadata.txt | cut -f12| sort | uniq)
-        biogeo=$(grep -a ${a} /data/work/Ortho_SwissBol/Samples/Final_dataset/All_samples_metadata.txt | cut -f15| sort | uniq)
+        sp=$(grep -a ${a} All_samples_metadata.txt | cut -f12| sort | uniq)
+        biogeo=$(grep -a ${a} All_samples_metadata.txt | cut -f15| sort | uniq)
         sed -i "s/>${a}.*/>${a}-${sp}-${biogeo}/g" ${i}
         done < temp_samples
     done

@@ -1,0 +1,53 @@
+### Asembly
+for i in $(cat list_samples) 
+    do
+    SAMPLE_NAME=$(echo $i)
+    spades.py -1 clean_demux-${SAMPLE_NAME}_R1_.fastq.paired.fq -2 clean_demux-${SAMPLE_NAME}_R2_.fastq.paired.fq -o ${SAMPLE_NAME}
+    done 
+
+### BLAST
+for i in $(cat list_samples)
+    do
+    #qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore
+    ln -s ../${i}_contigs_clean.fasta .
+    blastn -query ${i}_contigs_clean.fasta -db ortho_uce_probes_mapping -evalue 1e-6 -outfmt 6 -out ${i}_blast_UCE_output.txt
+    done
+
+### Identify UCE and USCO contigs
+
+for i in $(cat list_samples)
+    do
+
+    #Check the correspondance between contig-UCE 
+    awk '{ if ( $3 > 90 ) print $0}' ${i}_blast_UCE_output.txt > temp_blast.txt
+
+    cut -f1 temp_blast.txt > temp.1
+    cut -f2 temp_blast.txt | cut -d "-" -f2,3  > temp.2
+    cut -f3-9 temp_blast.txt > temp.3
+    paste temp.1 temp.2 |sort | uniq > temp_blast_correspondance
+    
+    sed "s/^/${i}-/" temp_blast_correspondance > ${i}_UCE_corresp
+    cp ${i}_contigs_clean.fasta temp.fasta
+    cut -f2 temp_blast_correspondance | sort | uniq -c | sort | awk '{ if ( $1 > 1 ) print $2}' > temp_list_UCE_0
+    grep -Ff temp_list_UCE_0 temp_blast.txt | cut -f2 | sort | uniq > temp_list_UCE
+
+    ##correspondence UCE-contigs 1-1
+    cut -d "-" -f 2,3 temp_list_UCE | sort | uniq > temp_list_UCE_rem
+    grep -Fvf temp_list_UCE_rem temp_blast_correspondance | grep -Fvf temp_list_contigs | cut -f1 > temp_list_corresp11
+
+        while read a
+        do
+        UCE=$(grep ${a} temp_blast.txt | sort -k3 | sed -n '1 p' | cut -f2) # Here I keep the best pident
+        sed -i "s/${a}/${i}-${UCE}-${a}/" temp.fasta 
+        done < temp_list_corresp11
+
+    grep  uce temp.fasta | sed "s/>//g" > ${i}_UCE_contigs
+    fastaselect.pl temp.fasta ${i}_UCE_contigs > ${i}_list_UCE_contigs.fasta
+    echo "$(wc -l ${i}_UCE_contigs) " >> summary_UCE
+
+    rm temp*
+
+done
+
+
+

@@ -1,7 +1,7 @@
 ################################################
 #title           : Obtaining consensus sequences
 #description     : This script combine all scripts for the analyses to obtain the consensus sequences of (i) UCE and USCO, (ii) mitogenome, (iii) COI barcode and (iv) rDNA. 
-#author		     : Inés Carrasquer Puyal
+#author	         : Inés Carrasquer Puyal
 #email	         : ines.carrasquer@unige.ch
 #date            : 20.01.2025
 ################################################
@@ -15,7 +15,7 @@ for i in Genome_ref1 Genome_ref2
     grep ${i} list_sample_mapping | cut  -f1 | sort -u > temp
     while read a 
         do
-        bwa mem ../${i}/${i}*.fasta /data/work/Ortho_SwissBol/Samples/Final_dataset/demux/ALL_SAMPLES_UNIQUE/clean_demux-${a}_R1_.paired.fastq /data/work/Ortho_SwissBol/Samples/Final_dataset/demux/ALL_SAMPLES_UNIQUE/clean_demux-${a}_R2_.paired.fastq > ${i}-${a}.sam
+        bwa mem ../${i}/${i}*.fasta clean_demux-${a}_R1_.paired.fastq clean_demux-${a}_R2_.paired.fastq > ${i}-${a}.sam
         samtools flagstat ${i}-${a}.sam > ${i}-${a}.sam.txt
 	    samtools view -h -b -S ${i}-${a}.sam > ${i}-${a}.bam
         name=$(echo ${i}-${a})
@@ -195,7 +195,7 @@ for j in Genome_ref1 Genome_ref2
 for i in $(cat list_samples) 
     do
     #Assembly
-    spades.py -1 /data/work/Ortho_SwissBol/Samples/Final_dataset/demux/ALL_SAMPLES_UNIQUE/clean_demux-${i}_R1_.paired.fastq -2 /data/work/Ortho_SwissBol/Samples/Final_dataset/demux/ALL_SAMPLES_UNIQUE/clean_demux-${i}_R2_.paired.fastq -o ${i}
+    spades.py -1 clean_demux-${i}_R1_.paired.fastq -2 clean_demux-${i}_R2_.paired.fastq -o ${i}
     cp ${i}/contigs.fasta CONTIGS_GOOD_CLEANING/${i}_contigs.fasta  
     cd CONTIGS_GOOD_CLEANING
     #Keep those longer than 100 bp
@@ -225,7 +225,7 @@ mkdir ALL_SAMPLES_1
 
 for i in $(cat ../list_samples)
     do
-    sub_order=$(grep -a ${i} /data/work/Ortho_SwissBol/Samples/Final_dataset/All_samples_metadata.txt | grep -ho "[[:alpha:]]*fera")
+    sub_order=$(grep -a ${i} All_samples_metadata.txt | grep -ho "[[:alpha:]]*fera")
     echo ${sub_order}
     #First RagTag
     if [ ${sub_order} = Ensifera ]  

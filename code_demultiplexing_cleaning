@@ -1,0 +1,63 @@
+################################################
+#title           : Demultiplexing and cleaning of reads
+#description     : This script combine all scripts for the demultiplexing and cleaning of reads from the files received by the sequencing platform
+#author	         : Inés Carrasquer Puyal
+#email	         : ines.carrasquer@unige.ch
+#date            : 20.01.2025
+################################################
+
+### Demultiplexing the samples from Fasteris using the in-line barcode and distributing them in the corresponding folder.
+
+while read a
+    do
+
+    FILE_CODE=$(echo ${a} | cut -d " " -f2)
+    FILE_NAME=$(echo "230509_NB501850_A_L1-4_"${FILE_CODE}) # to add :_R2.fastq.gz
+    FILE_SAMPLE=$(echo ${a} | cut -d " " -f1 | cut -d"-" -f3,4)
+    INDEX_NUMBER=$(grep -a ${FILE_SAMPLE} ../All_samples_metadata.txt | cut -f 5 )
+    
+    echo INDEX_${INDEX_NUMBER} >>list_index
+    mkdir INDEX_${INDEX_NUMBER}
+    cd INDEX_${INDEX_NUMBER}
+
+    #All_samples_metadata: barcode sequence in col 4; code in col 6
+    awk '{if ($5 == "'$INDEX_NUMBER'") print ">"$1"#"$4"^" }' All_samples_metadata.txt | tr "#" "\n" | seqtk seq -r > temp_barcodes.fasta
+
+    cutadapt -g GCTCTTCCGATCT -o temp_R1.fastq.gz ../../raw/${FILE_NAME}_R1.fastq.gz
+    cutadapt -g GCTCTTCCGATCT -o temp_R1_2.fastq.gz  temp_R1.fastq.gz
+    cutadapt -g GCTCTTCCGATCT -o temp_R2.fastq.gz ../../raw/${FILE_NAME}_R2.fastq.gz
+    cutadapt -g GCTCTTCCGATCT -o temp_R2_2.fastq.gz  temp_R2.fastq.gz
+    cutadapt -e 0.17 --minimum-length 30 -q 10 --no-indels -g file:temp_barcodes.fasta -o demux-{name}_R1_.fastq.gz -p demux-{name}_R2_.fastq.gz temp_R1_2.fastq.gz temp_R2.fastq.gz 
+
+    ln -s ../../raw/${FILE_NAME}_R1.fastq.gz .
+    ln -s ../../raw/${FILE_NAME}_R2.fastq.gz .
+    rm temp*
+    cd ..
+
+    done < Fasteris_demux.txt
+
+### Read cleaning
+
+for j in $(cat list_index)
+        do
+        cd ${j}
+
+        for i in `ls demux-*_R1_.fastq.gz`
+                do
+                sample=$( echo ${i} | sed -e 's/_R1_.fastq.gz//' )
+                #Removal of adapter sequences
+                cutadapt -q 10 -m 30 -a AGATCGGAAGAGC -o temp_${sample}_R1_.fastq ${i}
+                cutadapt -u 5 -q 10 -m 30 -a AGATCGGAAGAGC -o temp_${sample}_R2_.fastq ${sample}_R2_.fastq.gz
+
+                #Removal of poly-G poly-C
+                perl DropBpFastq_polyC.pl temp_${sample}_R1_.fastq clean_${sample}_R1_.fastq
+                perl DropBpFastq_polyC.pl temp_${sample}_R2_.fastq clean_${sample}_R2_.fastq
+
+                #Removal of unpaired reads
+                seqkit pair -1 clean_${sample}_R1_.fastq -2 clean_${sample}_R2_.fastq
+
+                rm temp*fastq
+
+                done
+        cd ..
+        done

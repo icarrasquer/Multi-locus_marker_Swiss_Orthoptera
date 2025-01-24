@@ -3,7 +3,7 @@
 
 export cores=16
 export base=Teleo_oc 
-export base_dir=/data/work/Ortho_SwissBol/UCE_genomes/Main/alignment
+export base_dir=alignment
 for critter in Gri_bi Laupa_ko Locus_mi Teleo_oc Time_mo Vandi_vi Xeno_bra;
     do
         export reads=$critter-reads.fq.gz;

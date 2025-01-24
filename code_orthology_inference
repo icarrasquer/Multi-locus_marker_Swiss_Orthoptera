@@ -1,7 +1,7 @@
 ################################################
 #title           : Orthology inference
 #description     : This script combine all scripts of orthology inference of UCE and USCO. 
-#author		     : Inés Carrasquer Puyal
+#author	         : Inés Carrasquer Puyal
 #email	         : ines.carrasquer@unige.ch
 #date            : 20.01.2025
 ################################################
@@ -53,7 +53,7 @@ for j in Genome_ref1 Genome_ref2
     grep -Fvf <(cut -f1 ../${j}_ALL_uce_usco) temp_regions > regions_not_identified
     cat regions_not_identified ../${j}_ALL_uce_usco > all_regions
     cut -f1 all_regions > temp_regions
-    samtools faidx -r temp_regions /data/work/Ortho_SwissBol/Samples/Final_dataset/Genomes/${j}/${j}_chr.fasta > temp_${j}_all_regions.fasta
+    samtools faidx -r temp_regions ${j}_chr.fasta > temp_${j}_all_regions.fasta
     
     #Obtain 20 higher values of distance
     for i in $(grep ">" ${j}_all_regions.fasta | cut -d">" -f2)
@@ -84,7 +84,7 @@ for j in Genome_ref1 Genome_ref2
   
         rm temp*
         done
-    cd /data/work/Ortho_SwissBol/Samples/Final_dataset/Genomes/Orthology/
+    cd ..
     done
 
 

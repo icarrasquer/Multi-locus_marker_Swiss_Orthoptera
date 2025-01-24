@@ -1,0 +1,35 @@
+### Map reads against own contigs
+for i in $(cat list_samples)
+        do
+
+    bwa index ref/${i}_contigs.fasta
+    bwa mem ref/${i}_contigs.fasta clean_demux-${i}_R1_.fastq.paired.fq clean_demux-${i}_R2_.fastq.paired.fq > ${i}_on_all_contigs_recal_capture.sam
+
+    done
+
+### Get nb of reads mapped to UCE and USCO
+for i in $(cat list_samples_uniq)
+    do
+    
+    echo ${i} > temp
+
+
+    # Nb of reads of the ind
+    nb_reads=$(( $(wc -l ^clean_demux-${i}_R1_.fastq.paired.fq | cut -d " " -f 1) / 2 )) 
+    echo $nb_reads >> temp
+    
+    # Nb of reads of the ind MAPPED
+    samtools flagstat ${i}_on_all_contigs_recal_capture.sam | grep "mapped (" | cut -d " " -f 1 >> temp 
+    samtools view -F 4 ${i}_on_all_contigs_recal_capture.sam > temp.sam
+    for j in uce usco
+        do
+
+        grep ${i} contigs_corresp/corresp_${j^^} | cut -f1 | cut -d "-" -f 3 > temp_list_nodes
+        grep -Ff temp_list_nodes temp.sam | wc -l >> temp
+
+        done
+
+    cat temp | tr "\n" " " | sed "s/ $/\n/" >> summary_mapping_all.txt
+    
+    done
+

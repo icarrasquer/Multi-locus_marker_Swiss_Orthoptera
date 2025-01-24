@@ -1,7 +1,7 @@
 ################################################
 #title           : Genetic diversity estimation
 #description     : This script combine all scripts for the genetic diversity estimation using UCE and USCO and further analysis
-#author		       : Inés Carrasquer Puyal
+#author	         : Inés Carrasquer Puyal
 #email	         : ines.carrasquer@unige.ch
 #date            : 20.01.2025
 ################################################
@@ -11,7 +11,7 @@
 for i in $(list_sample)
     do
     
-    ln -s /data/work/Ortho_SwissBol/Samples/Final_dataset/demux/ALL_SAMPLES_UNIQUE/clean_demux-${i}_R{1,2}_.paired.fastq .
+    ln -s clean_demux-${i}_R{1,2}_.paired.fastq .
     
     # Prepare the reference (Only USCO and USCO)
     cat ${i}*fasta | sed -e 's/'${i}'-//g' -e 's/>.*rDNA/>rDNA/' > temp_ref.fasta

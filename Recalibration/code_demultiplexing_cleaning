@@ -1,0 +1,44 @@
+### Demultiplexing
+
+while read a
+        do
+
+    FILE_NAME=$(echo ${a})
+    FILE_SAMPLE=$(echo ${FILE_NAME} | cut -d"-" -f3,4 | cut -d"_" -f 1)
+    #All_samples_metadata: index in col 5
+    INDEX_NUMBER=$(grep -a ${FILE_SAMPLE} ../All_samples_metadata.txt | cut -f 5)
+
+    mkdir INDEX_${INDEX_NUMBER}
+    cd INDEX_${INDEX_NUMBER}
+    #All_samples_metadata: barcode sequence in col 4; code in col 6
+    awk '{if ($5 == "'$INDEX_NUMBER'") print ">"$1"#"$4"^" }' ../../All_samples_metadata.txt | tr "#" "\n" | seqtk seq -r > temp_barcodes.fasta
+
+    cutadapt -e 0.17 --minimum-length 30 -q 10 --no-indels -g file:temp_barcodes.fasta -o demux-{name}_R1_.fastq.gz -p demux-{name}_R2_.fastq.gz ../../raw/${FILE_NAME}_R1_001*.fastq.gz ../../raw/${FILE_NAME}_R2_001*.fastq.gz 
+
+    done < list_files
+
+### Cleaning
+for j in $(cat list_index)
+        do
+        cd ${j}
+
+        for i in `ls demux-*_R1_.fastq.gz`
+                do
+                sample=$( echo ${i} | sed -e 's/_R1_.fastq.gz//' )
+                cutadapt -q 10 -m 30 -a AGATCGGAAGAGC -o clean_${i} ${i}
+                cutadapt -u 5 -q 10 -m 30 -a AGATCGGAAGAGC -o clean_${sample}_R2_.fastq.gz ${sample}_R2_.fastq.gz
+                done
+
+
+        for i in `ls clean_*fastq.gz`
+        do
+        bgzip -d ${i}
+        done
+
+        for i in `ls clean_demux-*_R1_.fastq`
+                do
+                sample=$( echo ${i} | sed -e 's/_R1_.fastq//' )
+                fastq_pair ${i} ${sample}_R2_.fastq
+                bgzip ${i}
+                done
+        done

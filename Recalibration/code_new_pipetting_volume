@@ -1,0 +1,43 @@
+#Upload data
+
+All_samples_metadata=read.delim(file = "All_samples_metadata.txt", sep="\t")
+Summary_mapping=read.delim(file = "summary_mapping_all.txt", sep=" ")
+
+#Calculate log of nuclear reads
+data=All_samples_metadata %>% 
+  full_join(Summary_mapping, by=c("LAB_LABEL"= "sample")) %>%
+  mutate(log_nuc=log(uce_recal+usco_recal),
+        log_nuc=ifelse(log_nuc,== "-Inf", 0, log_nuc )) %>%arrange(log_nuc) %>%
+  group_by(ORTSWBL_recalibration_pool_pool) %>% 
+  mutate(mean_log_reads_pool = mean(log_nuc, na.rm=T)) %>% filter(ORTSWBL_recalibration_pool != "")
+
+#Assign new pippeting volume
+volumes=c(12,10, 5,2,1.5,1,0.5)
+data$Pipetting_volume = NA
+
+
+for (i in unique(data$ORTSWBL_recalibration_pool)) {
+  temp=data %>% as.data.frame %>% filter(ORTSWBL_recalibration_pool == i) %>% select(log_nuc)
+  values_interval=quantile(temp$log_nuc, probs=seq(0,1,length.out =length(volumes)+1))
+    
+  x=1
+  for (j in 1:length(volumes)) {
+    
+    data[ which(data$ORTSWBL_recalibration_pool == i & values_interval[x] <= data$log_nuc & data$log_nuc <= values_interval[x+1]), 
+          "Pipetting_volume"] =volumes[j]  
+    x=x+1
+  }  
+}
+
+
+data$Pipetting_volume = as.factor(data$Pipetting_volume)
+
+#Plot the logarithm # mapped reads in nuclear loci per pool
+data$ORTSWBL_recalibration_pool=factor(data$ORTSWBL_recalibration_pool, labels=c("Pool 1", "Pool 2", "Pool 3",
+                                                     "Pool 4", "Pool 5", "Pool 6",
+                                                     "Pool 7", "Pool 8"))
+plo_pipetting=ggplot(data, aes(x=seq(1, length(data$log_nuc)), y=log_nuc)) + 
+  geom_point(aes(colour = Pipetting_volume)) + facet_wrap(~ORTSWBL_recalibration_pool, nrow=2) + ylab("Logarithm of the number of reads mapped against nuclear loci")+
+  xlab("Individuals") +theme_bw() +
+  scale_color_brewer(palette="Dark2") +
+  labs(color = "Pipetting volume (µL)")
