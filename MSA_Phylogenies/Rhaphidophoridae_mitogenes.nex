@@ -1,0 +1,21 @@
+#NEXUS
+
+BEGIN TAXA;
+    DIMENSIONS NTAX=9;
+    TAXLABELS
+"Phaneroptera falcata ORT-047"[&!color=#4B0082]
+"Troglophilus neglectus ORT-142"[&!color=#00CED1]
+"Troglophilus cavicola ORT-174"[&!color=#20B2AA]
+"Dolichopoda geniculata ORT-296"[&!color=#008000]
+"Dolichopoda geniculata ORT-297"[&!color=#008000]
+"Troglophilus neglectus ORT-423"[&!color=#00CED1]
+"Phaneroptera falcata ORT-535"[&!color=#4B0082]
+"Troglophilus cavicola ORT-640"[&!color=#20B2AA]
+"Troglophilus cavicola ORT-641"[&!color=#20B2AA]
+  ;
+END;
+
+BEGIN TREES;
+    TREE 1 = 
+("Troglophilus cavicola ORT-174":0.0011850000,"Troglophilus cavicola ORT-641":0.0003923856,(((("Dolichopoda geniculata ORT-297":0.0031467789,"Dolichopoda geniculata ORT-296":0.0000023731)100/100:0.1684967979,("Phaneroptera falcata ORT-047":0.0346962396,"Phaneroptera falcata ORT-535":0.0087181645)100/100:0.2887819224)99.9/100:0.1122553079,("Troglophilus neglectus ORT-142":0.0099115282,"Troglophilus neglectus ORT-423":0.0073758739)100/100:0.0512541599)99.9/100:0.0584060141,"Troglophilus cavicola ORT-640":0.0072030940)98.1/100:0.0089149927);
+END;

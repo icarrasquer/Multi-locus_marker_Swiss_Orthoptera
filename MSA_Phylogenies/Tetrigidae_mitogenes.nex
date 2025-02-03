@@ -1,0 +1,48 @@
+#NEXUS
+
+BEGIN TAXA;
+    DIMENSIONS NTAX=36;
+    TAXLABELS
+"Tetrix tenuicornis ORT-003"[&!color=#BA55D3]
+"Tetrix tenuicornis ORT-011"[&!color=#BA55D3]
+"Tetrix tenuicornis ORT-015"[&!color=#BA55D3]
+"Tetrix bipunctata bipunctata ORT-017"[&!color=#32CD32]
+"Tetrix bipunctata bipunctata ORT-028"[&!color=#32CD32]
+"Tetrix tenuicornis ORT-032"[&!color=#BA55D3]
+"Tetrix bipunctata bipunctata ORT-036"[&!color=#32CD32]
+"Tetrix undulata ORT-045"[&!color=#DAA520]
+"Tetrix subulata ORT-090"[&!color=#8A2BE2]
+"Psophus stridulus ORT-136"[&!color=#87CEEB]
+"Tetrix tenuicornis ORT-140"[&!color=#BA55D3]
+"Tetrix subulata ORT-162"[&!color=#8A2BE2]
+"Tetrix bipunctata bipunctata ORT-168"[&!color=#32CD32]
+"Tetrix tenuicornis ORT-171"[&!color=#BA55D3]
+"Tetrix undulata ORT-190"[&!color=#DAA520]
+"Tetrix bipunctata bipunctata ORT-197"[&!color=#32CD32]
+"Tetrix bipunctata bipunctata ORT-202"[&!color=#32CD32]
+"Tetrix subulata ORT-212"[&!color=#8A2BE2]
+"Xya variegata ORT-221"[&!color=#99a0a1]
+"Miramella alpina subalpina ORT-355"[&!color=#FF0000]
+"Tetrix tuerki ORT-433"[&!color=#FF7F50]
+"Tetrix tuerki ORT-434"[&!color=#FF7F50]
+"Tetrix tenuicornis ORT-435"[&!color=#BA55D3]
+"Tetrix subulata ORT-437"[&!color=#8A2BE2]
+"Tetrix bipunctata bipunctata ORT-439"[&!color=#32CD32]
+"Tetrix bipunctata kraussi ORT-440"[&!color=#32CD32]
+"Tetrix bipunctata kraussi ORT-441"[&!color=#32CD32]
+"Tetrix bipunctata bipunctata ORT-442"[&!color=#32CD32]
+"Chorthippus vagans ORT-464"[&!color=#FF8C00]
+"Tetrix bipunctata kraussi ORT-625"[&!color=#32CD32]
+"Tetrix bipunctata kraussi ORT-626"[&!color=#32CD32]
+"Tetrix bipunctata kraussi ORT-628"[&!color=#32CD32]
+"Tetrix tuerki ORT-631"[&!color=#FF7F50]
+"Tetrix tuerki ORT-633"[&!color=#FF7F50]
+"Tetrix tuerki ORT-634"[&!color=#FF7F50]
+"Tetrix tuerki ORT-635"[&!color=#FF7F50]
+  ;
+END;
+
+BEGIN TREES;
+    TREE 1 = 
+("Tetrix bipunctata bipunctata ORT-197":0.0014745102,((((("Tetrix tenuicornis ORT-003":0.0017102561,("Tetrix tenuicornis ORT-171":0.0006870092,(("Tetrix tenuicornis ORT-015":0.0008746316,"Tetrix tenuicornis ORT-140":0.0015335837)93/97:0.0017464413,("Tetrix tenuicornis ORT-435":0.0017157229,"Tetrix tenuicornis ORT-032":0.0015820791)73.6/59:0.0003134770)0/34:0.0000015296)74.2/59:0.0009939395)76/71:0.0040919331,"Tetrix tenuicornis ORT-011":0.0023756621)100/100:0.0562431362,(("Xya variegata ORT-221":0.2156535177,"Psophus stridulus ORT-136":0.2246156213)96.2/99:0.2098806115,("Miramella alpina subalpina ORT-355":0.1227903378,"Chorthippus vagans ORT-464":0.0941708882)100/99:0.1322878373)100/100:0.3722291688)93.9/69:0.0225765017,(((("Tetrix subulata ORT-212":0.0002766610,"Tetrix subulata ORT-090":0.0054468223)43.1/69:0.0017989194,("Tetrix subulata ORT-437":0.0057770928,("Tetrix undulata ORT-190":0.0000021390,"Tetrix undulata ORT-045":0.0014551521)100/100:0.0735245662)74.9/78:0.0077560239)100/100:0.0290263575,"Tetrix subulata ORT-162":0.0000953486)100/100:0.1100159344,("Tetrix tuerki ORT-433":0.0000024806,("Tetrix tuerki ORT-635":0.0071348257,(("Tetrix tuerki ORT-434":0.0049780172,("Tetrix tuerki ORT-634":0.0002161741,"Tetrix tuerki ORT-631":0.0055569666)100/100:0.0119753600)76.5/67:0.0018156517,"Tetrix tuerki ORT-633":0.0022316206)80.5/75:0.0013984847)100/100:0.0294541505)100/100:0.0626760840)42.7/45:0.0125732540)100/100:0.0804874665,"Tetrix bipunctata bipunctata ORT-036":0.0025329600)100/100:0.0299628656,((((("Tetrix bipunctata bipunctata ORT-017":0.0000013907,(("Tetrix bipunctata bipunctata ORT-439":0.0051844750,"Tetrix bipunctata kraussi ORT-440":0.0054734437)97.4/99:0.0042778065,"Tetrix bipunctata bipunctata ORT-202":0.0036675783)99.7/100:0.0090762324)92.2/80:0.0013127395,(("Tetrix bipunctata bipunctata ORT-168":0.0016613180,("Tetrix bipunctata kraussi ORT-441":0.0013231005,"Tetrix bipunctata kraussi ORT-626":0.0006967913)92/97:0.0017619882)97.4/98:0.0028551176,"Tetrix bipunctata kraussi ORT-625":0.0026005585)80.2/55:0.0009630028)0/40:0.0000023736,"Tetrix bipunctata kraussi ORT-628":0.0017507761)90.6/82:0.0035533234,"Tetrix bipunctata bipunctata ORT-442":0.0081569802)95.1/100:0.0033280446,"Tetrix bipunctata bipunctata ORT-028":0.0025692439)100/100:0.0281043271);
+END;

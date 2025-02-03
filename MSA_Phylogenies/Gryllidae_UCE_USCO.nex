@@ -1,0 +1,42 @@
+#NEXUS
+
+BEGIN TAXA;
+    DIMENSIONS NTAX=30;
+    TAXLABELS
+"Gryllus campestris ORT-072"[&!color=#778899]
+"Metrioptera brachyptera ORT-081"[&!color=#7FFF00]
+"Pteronemobius lineolatus ORT-182"[&!color=#A0522D]
+"Melanogryllus desertus ORT-222"[&!color=#0000FF]
+"Oecanthus pellucens ORT-223"[&!color=#000080]
+"Eumodicogryllus bordigalensis ORT-313"[&!color=#228B22]
+"Eumodicogryllus bordigalensis ORT-314"[&!color=#228B22]
+"Eumodicogryllus bordigalensis ORT-315"[&!color=#228B22]
+"Gryllotalpa gryllotalpa ORT-318"[&!color=#6A5ACD]
+"Gryllotalpa gryllotalpa ORT-319"[&!color=#6A5ACD]
+"Gryllotalpa gryllotalpa ORT-320"[&!color=#6A5ACD]
+"Gryllotalpa gryllotalpa ORT-321"[&!color=#6A5ACD]
+"Gryllus campestris ORT-322"[&!color=#778899]
+"Gryllus campestris ORT-323"[&!color=#778899]
+"Gryllus campestris ORT-324"[&!color=#778899]
+"Nemobius sylvestris ORT-373"[&!color=#008000]
+"Nemobius sylvestris ORT-374"[&!color=#008000]
+"Nemobius sylvestris ORT-375"[&!color=#008000]
+"Nemobius sylvestris ORT-376"[&!color=#008000]
+"Oecanthus pellucens ORT-379"[&!color=#000080]
+"Oecanthus pellucens ORT-381"[&!color=#000080]
+"Pteronemobius heydenii ORT-382"[&!color=#6B8E23]
+"Pteronemobius heydenii ORT-386"[&!color=#6B8E23]
+"Gryllotalpa gryllotalpa ORT-389"[&!color=#6A5ACD]
+"Gryllomorpha dalmatina ORT-447"[&!color=#7B68EE]
+"Platycleis albopunctata albopunctata ORT-512"[&!color=#F0E68C]
+"Pholidoptera griseoaptera ORT-528"[&!color=#483D8B]
+"Gryllotalpa gryllotalpa ORT-555"[&!color=#6A5ACD]
+"Gryllus campestris ORT-558"[&!color=#778899]
+"Eumodicogryllus bordigalensis ORT-590"[&!color=#228B22]
+  ;
+END;
+
+BEGIN TREES;
+    TREE 1 = 
+("Eumodicogryllus bordigalensis ORT-314":0.0003563379,(((((((("Gryllotalpa gryllotalpa ORT-319":0.0000021874,"Gryllotalpa gryllotalpa ORT-555":0.0011576568)97.7/79:0.0011966790,(("Gryllotalpa gryllotalpa ORT-321":0.0010352831,"Gryllotalpa gryllotalpa ORT-320":0.0004721093)83.7/49:0.0005184096,"Gryllotalpa gryllotalpa ORT-318":0.0004772705)87.2/49:0.0004061083)65.9/62:0.0007360962,"Gryllotalpa gryllotalpa ORT-389":0.0003160344)100/100:0.0918484139,("Pholidoptera griseoaptera ORT-528":0.0104889302,("Platycleis albopunctata albopunctata ORT-512":0.0057684220,"Metrioptera brachyptera ORT-081":0.0079640979)42.6/61:0.0054248992)100/100:0.1474041563)100/100:0.0482628276,((("Nemobius sylvestris ORT-376":0.0017149256,("Nemobius sylvestris ORT-374":0.0009128950,"Nemobius sylvestris ORT-373":0.0006960836)0/58:0.0000020424)71/57:0.0005916638,"Nemobius sylvestris ORT-375":0.0014742699)100/100:0.0419258090,(("Pteronemobius heydenii ORT-382":0.0013573671,"Pteronemobius heydenii ORT-386":0.0007238317)100/100:0.0194945727,"Pteronemobius lineolatus ORT-182":0.0269274849)100/100:0.0404716524)100/100:0.0458346281)98.1/89:0.0137660515,((("Oecanthus pellucens ORT-381":0.0016219088,"Oecanthus pellucens ORT-223":0.0001098004)99.8/100:0.0050257905,"Oecanthus pellucens ORT-379":0.0039466808)100/100:0.0960933027,"Gryllomorpha dalmatina ORT-447":0.0610874122)47.1/59:0.0093169867)100/100:0.0318613970,("Melanogryllus desertus ORT-222":0.0099259669,(("Gryllus campestris ORT-558":0.0023041985,(("Gryllus campestris ORT-323":0.0013799170,"Gryllus campestris ORT-072":0.0008044039)61.8/78:0.0010582172,"Gryllus campestris ORT-322":0.0005466418)0/37:0.0000020331)92.4/76:0.0004992974,"Gryllus campestris ORT-324":0.0012279454)100/100:0.0087744851)95.8/93:0.0040082354)100/100:0.0211269851,"Eumodicogryllus bordigalensis ORT-590":0.0016322366)76/59:0.0006732062,("Eumodicogryllus bordigalensis ORT-313":0.0005513688,"Eumodicogryllus bordigalensis ORT-315":0.0004954583)9.5/33:0.0001336435);
+END;

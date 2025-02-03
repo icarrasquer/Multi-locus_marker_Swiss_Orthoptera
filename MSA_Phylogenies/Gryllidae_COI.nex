@@ -1,0 +1,36 @@
+#NEXUS
+
+BEGIN TAXA;
+    DIMENSIONS NTAX=24;
+    TAXLABELS
+"Pteronemobius lineolatus ORT-182"[&!color=#A0522D]
+"Oecanthus pellucens ORT-223"[&!color=#000080]
+"Eumodicogryllus bordigalensis ORT-313"[&!color=#228B22]
+"Eumodicogryllus bordigalensis ORT-314"[&!color=#228B22]
+"Eumodicogryllus bordigalensis ORT-315"[&!color=#228B22]
+"Gryllotalpa gryllotalpa ORT-321"[&!color=#6A5ACD]
+"Gryllus campestris ORT-323"[&!color=#778899]
+"Gryllus campestris ORT-324"[&!color=#778899]
+"Nemobius sylvestris ORT-373"[&!color=#008000]
+"Nemobius sylvestris ORT-375"[&!color=#008000]
+"Oecanthus pellucens ORT-378"[&!color=#000080]
+"Oecanthus pellucens ORT-379"[&!color=#000080]
+"Oecanthus pellucens ORT-381"[&!color=#000080]
+"Pteronemobius heydenii ORT-382"[&!color=#6B8E23]
+"Pteronemobius heydenii ORT-383"[&!color=#6B8E23]
+"Pteronemobius heydenii ORT-384"[&!color=#6B8E23]
+"Pteronemobius heydenii ORT-385"[&!color=#6B8E23]
+"Pteronemobius heydenii ORT-387"[&!color=#6B8E23]
+"Pteronemobius heydenii ORT-388"[&!color=#6B8E23]
+"Platycleis albopunctata albopunctata ORT-512"[&!color=#F0E68C]
+"Pholidoptera griseoaptera ORT-528"[&!color=#483D8B]
+"Gryllus campestris ORT-557"[&!color=#778899]
+"Gryllus campestris ORT-558"[&!color=#778899]
+"Eumodicogryllus bordigalensis ORT-590"[&!color=#228B22]
+  ;
+END;
+
+BEGIN TREES;
+    TREE 1 = 
+("Nemobius sylvestris ORT-373":0.0000010000,(((((("Pteronemobius heydenii ORT-388":0.0034172664,("Pteronemobius heydenii ORT-387":0.0000010000,("Pteronemobius heydenii ORT-385":0.0000010000,"Pteronemobius heydenii ORT-384":0.0000010000)0/98:0.0000010000)0/75:0.0000010000)0/80:0.0000010000,"Pteronemobius heydenii ORT-382":0.0000010000)0/90:0.0000010000,"Pteronemobius heydenii ORT-383":0.0071245955)96.3/100:0.1118080576,"Pteronemobius lineolatus ORT-182":0.0882318334)91.8/89:0.1046332579,(("Gryllus campestris ORT-557":0.3038890176,(("Pholidoptera griseoaptera ORT-528":0.1154577408,"Platycleis albopunctata albopunctata ORT-512":0.1685618136)90.5/86:0.0993849660,"Gryllotalpa gryllotalpa ORT-321":0.1579093000)76.3/40:0.0449586281)0/17:0.0000021242,((("Oecanthus pellucens ORT-381":0.0040090467,"Oecanthus pellucens ORT-378":0.0000010000)0/77:0.0000010000,"Oecanthus pellucens ORT-223":0.0080009163)85.9/93:0.0120143466,"Oecanthus pellucens ORT-379":0.0000020775)100/100:0.2484326786)73.5/31:0.0147492016)80/22:0.0329716281,(((("Eumodicogryllus bordigalensis ORT-315":0.0000000000,"Eumodicogryllus bordigalensis ORT-590":0.0000000000):0.0000000000,"Eumodicogryllus bordigalensis ORT-314":0.0000000000):0.0000010000,"Eumodicogryllus bordigalensis ORT-313":0.0000010000)98.9/100:0.1045711197,(("Gryllus campestris ORT-323":0.0000000000,"Gryllus campestris ORT-324":0.0000000000):0.0000010000,"Gryllus campestris ORT-558":0.0000010000)96.2/100:0.0777888949)73.7/36:0.0229215695)100/100:0.2697380008,"Nemobius sylvestris ORT-375":0.0000010000);
+END;

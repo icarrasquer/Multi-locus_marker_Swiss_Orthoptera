@@ -1,0 +1,41 @@
+#NEXUS
+
+BEGIN TAXA;
+    DIMENSIONS NTAX=29;
+    TAXLABELS
+"Nemobius sylvestris ORT-021"[&!color=#008000]
+"Metrioptera brachyptera ORT-081"[&!color=#7FFF00]
+"Gryllomorpha dalmatina ORT-193"[&!color=#7B68EE]
+"Melanogryllus desertus ORT-222"[&!color=#0000FF]
+"Eumodicogryllus bordigalensis ORT-313"[&!color=#228B22]
+"Eumodicogryllus bordigalensis ORT-315"[&!color=#228B22]
+"Gryllotalpa gryllotalpa ORT-318"[&!color=#6A5ACD]
+"Gryllotalpa gryllotalpa ORT-319"[&!color=#6A5ACD]
+"Gryllotalpa gryllotalpa ORT-320"[&!color=#6A5ACD]
+"Gryllotalpa gryllotalpa ORT-321"[&!color=#6A5ACD]
+"Nemobius sylvestris ORT-373"[&!color=#008000]
+"Nemobius sylvestris ORT-374"[&!color=#008000]
+"Nemobius sylvestris ORT-375"[&!color=#008000]
+"Nemobius sylvestris ORT-376"[&!color=#008000]
+"Oecanthus pellucens ORT-379"[&!color=#000080]
+"Oecanthus pellucens ORT-380"[&!color=#000080]
+"Oecanthus pellucens ORT-381"[&!color=#000080]
+"Pteronemobius heydenii ORT-382"[&!color=#6B8E23]
+"Pteronemobius heydenii ORT-383"[&!color=#6B8E23]
+"Pteronemobius heydenii ORT-384"[&!color=#6B8E23]
+"Pteronemobius heydenii ORT-385"[&!color=#6B8E23]
+"Pteronemobius heydenii ORT-386"[&!color=#6B8E23]
+"Pteronemobius heydenii ORT-387"[&!color=#6B8E23]
+"Pteronemobius heydenii ORT-388"[&!color=#6B8E23]
+"Gryllotalpa gryllotalpa ORT-389"[&!color=#6A5ACD]
+"Platycleis albopunctata albopunctata ORT-512"[&!color=#F0E68C]
+"Pholidoptera griseoaptera ORT-528"[&!color=#483D8B]
+"Gryllotalpa gryllotalpa ORT-555"[&!color=#6A5ACD]
+"Eumodicogryllus bordigalensis ORT-590"[&!color=#228B22]
+  ;
+END;
+
+BEGIN TREES;
+    TREE 1 = 
+("Pteronemobius heydenii ORT-385":0.0000000000,(((("Pteronemobius heydenii ORT-388":0.0008372830,(((((("Melanogryllus desertus ORT-222":0.0179724483,("Eumodicogryllus bordigalensis ORT-313":0.0072368350,"Eumodicogryllus bordigalensis ORT-590":0.0000010005)80.1/92:0.0015899182)64/66:0.0043909837,"Eumodicogryllus bordigalensis ORT-315":0.0024906617)100/100:0.0417484477,(("Oecanthus pellucens ORT-381":0.0024625887,"Oecanthus pellucens ORT-379":0.0035458376)95.5/96:0.0055932294,"Oecanthus pellucens ORT-380":0.0010181346)100/100:0.0489140759)94.6/91:0.0144926130,(("Gryllotalpa gryllotalpa ORT-321":0.0000022102,((("Gryllotalpa gryllotalpa ORT-389":0.0003185778,("Gryllotalpa gryllotalpa ORT-319":0.0000010005,"Gryllotalpa gryllotalpa ORT-320":0.0000010005)0/54:0.0000010005)0/96:0.0000010005,"Gryllotalpa gryllotalpa ORT-318":0.0000010005)0/95:0.0000010005,"Gryllotalpa gryllotalpa ORT-555":0.0004065324)89.8/92:0.0017549123)100/100:0.0469244940,((("Metrioptera brachyptera ORT-081":0.0000000000,"Platycleis albopunctata albopunctata ORT-512":0.0000000000):0.0000010005,"Pholidoptera griseoaptera ORT-528":0.0000010005)93.1/100:0.0028806175,"Gryllomorpha dalmatina ORT-193":0.0050086678)99.9/100:0.0228758517)100/100:0.0358073680)77.5/78:0.0145490931,((("Nemobius sylvestris ORT-374":0.0000010005,("Nemobius sylvestris ORT-373":0.0000010005,"Nemobius sylvestris ORT-375":0.0000010005)0/100:0.0000010005)0/65:0.0000010005,"Nemobius sylvestris ORT-021":0.0000010005)0/64:0.0000021354,"Nemobius sylvestris ORT-376":0.0018946720)100/100:0.0527200233)100/100:0.0801828325,"Pteronemobius heydenii ORT-387":0.0000010005)95.5/96:0.0020349221)84/92:0.0011538436,"Pteronemobius heydenii ORT-386":0.0000010005)90.6/100:0.0006427273,"Pteronemobius heydenii ORT-384":0.0000010005):0.0000010005,"Pteronemobius heydenii ORT-383":0.0000000000):0.0000000000,"Pteronemobius heydenii ORT-382":0.0000000000);
+END;
